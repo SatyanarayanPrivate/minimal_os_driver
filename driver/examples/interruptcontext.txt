@@ -1,0 +1,159 @@
+Brief thy. on bottom half processing :
+
+1. interrupt handler (ISRS) of device drivers are of 2 types:
+
+   a) normal, standard ISRs, which do the top half processing 
+      in interrupt context only - only critical h/w related work
+   b) any other pending coding must be done in bottom half 
+      processing - meaning, less critical data processing or 
+      similar work - typically, done using softirqs or 
+      tasklets or workqueues 
+       - softirqs execute after top half processing 
+         before interrupt handling completes 
+       - softirqs are executed with hard interrupts ENABLED
+       - top half processing may or may not have the hard interrupts
+         ENABLED - most common case is hard interrupts are disabled 
+       - softirqs may be treated as kernel objects and have an 
+         assoicated method, which does the processing 
+       - some softirqs are dedicated for handling tasklets - meaning,
+         tasklet routines are processed by softirq routines 
+       - tasklets that are scheduled will be managed and processed
+         by softirq handlers 
+       - our job is use appropriate tasklet objects, initialize and
+         schedule them 
+   c) it is normally the responsibility of ISRs of device drivers
+      to schedule softirqs or tasklets - in our case, we will scheduling
+      tasklets and we do not directly deal with softirqs !!!
+   d) typically, softirqs and tasklets execute in interrupt context -
+      the rules that we discussed apply    
+
+
+Using tasklets 
+
+1. create a tasklet using standard system APIs - 
+
+   initialize and associate a tasklet function - 
+
+   tasklet function must allocate memory using GFP_ATOMIC
+
+2. create another tasklet, initialize and associate a 
+   function - in this function, deallocate previously 
+   allocated memory 
+
+3. tasklets need to be scheduled using system APIs - 
+
+   also check that tasklet execute in interrupt context, not 
+   in process context 
+
+4. finally, tasklets need to destroyed, when used up !!!
+
+
+5. you need 2 tasklet objects 
+
+6. must initialize using tasklet_init()
+
+7. 2 tasklet functions 
+
+8. tasklet_schedule() !!!
+
+9. tasklet_init(&custom_tasklet1, custom_tasklet_func1, &custom_obj1); 
+10. tasklet_init(&custom_tasklet2, custom_tasklet_func2, &custom_obj1); 
+ 
+struct custom_obj { 
+
+  void *mem;
+  
+
+};
+struct custom_obj custom_obj1;
+
+steps for shared workqueue 
+
+1. create a work_struct object
+
+2. initialize the work_struct object using INIT_WORK
+
+3. write a work queue function with void work_queue_func1(void *ptr)
+
+4. use schedule_work(&custom_work)
+
+5. repeat the same coding tests as we did for tasklet !! what are the
+   observations !!
+
+6. repeat the memory allocation using GFP_KERNEL !! what do you observe ??
+   how is it differnet from tasklet !!!
+
+7. use a wait queue head in your module !! block first work_struct in 
+   the wait queue - wake-up the first work_struct  from the wait queue 
+   using second work_struct !! what do you observe !!! - how is this different 
+   from tasklets ? can we do the above activity in  tasklet ?? what will happen !!!
+
+   - in this coding, schedule the first work_struct and block in init routine
+     for a signal - when you send a signal, schedule the next work_struct 
+
+   - wait queue used for init_module is different from wait queue used for
+     work_struct routines !!!
+
+   - before sending the signal to wake-up init routine, use ps to check and
+     see anything special - which kernel thread is involved in handling 
+     our work_struct !!!
+
+   - is it possible that we can use current to check the pid of 
+     kernel thread , when our work_struct is being processed !!!
+
+8. in the next case, do the following :
+
+   - do not use a wait queue in the init routine to block the init routine
+   - create one work_struct and schedule it normally and let it block in the
+     
+   - create 
+   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

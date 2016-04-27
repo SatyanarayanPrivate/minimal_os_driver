@@ -1,0 +1,80 @@
+(1)		pwd = /home/dssd/Desktop/OS_Linux/drivers/linux-2.6.34-12/
+
+(2)		# mkdir drivers/char/lab_custom
+
+
+(3)		# vi drivers/char/Makefile 
+		Edit as anywhere: 
+			obj-$(CONFIG_LAB_CUSTOM)	+= lab_custom/
+
+
+(4)		# vi drivers/char/Kconfig
+		Edit at end before "endmenu":
+			source "drivers/char/lab_custom/Kconfig"
+
+
+(5)		# vi drivers/char/lab_custom/Makefile
+		Edit as:
+			obj-$(CONFIG_LAB_CUSTOM)        += hello.o
+
+
+(6)		# vi drivers/char/lab_custom/Kconfig
+
+			config LAB_CUSTOM
+		    	<tab>tristate "configure hello"
+				default n
+
+
+(7) 	create hello.c in lab_custom/
+
+(7a) 	Check by make proper
+(7b) 	Check by make oldconfig (confirms if the module is added or not  for only first time)
+
+(8)		# make menuconfig  
+		Select options as below:
+		Device Drivers  ---> Character devices  ---> < > configure hello 
+		Use space bar to change to 		---> <M> configure hello 	
+		Exit
+
+(9)		/home/dssd/Desktop/OS_Linux/drivers/linux-2.6.34-12/
+		Check the changes in .config
+		# vi .config
+		Search for :
+			CONFIG_LAB_CUSTOM=m
+
+
+(12)	(pwd = /home/dssd/Desktop/OS_Linux/drivers/linux-2.6.34-12/)
+	# make -j 8
+
+(13)	# make modules_install
+
+(14)	# make install
+
+(15)	# reboot
+
+(15)	# make drivers/char/lab_custom/hello.ko
+
+
+(16)	Check if modules are installed or not
+		# vi /lib/modules/`uname -r`/modules.dep						
+		Search for hello.ko
+
+(17)	 # modprobe hello (or #insmod <absolute path>/hello)
+		Will load the hello module
+
+(18)	# lsmod | less	Search for module 'hello'
+
+(19)	# dmesg | less 	Search for message "hello world"
+
+(20)	# rmmod hello	Removes module
+
+(21)	Check if removed or not
+		# lsmod | less
+		Search for module 'hello'. It won't be there
+
+(22)	# dmesg | less	Search for message "Goodbye.."
+
+(23) 	# dmesg -c (for clearing kernel log buffer)
+
+
+

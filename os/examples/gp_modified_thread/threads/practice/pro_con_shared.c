@@ -1,0 +1,112 @@
+#include <errno.h>
+#include <pthread.h>
+#include <semaphore.h>
+#include <signal.h>
+//#include "buffer.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+
+static pthread_mutex_t  input_buffer_lock   = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t  op_buffer_lock    = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t  display_buffer_lock = PTHREAD_MUTEX_INITIALIZER;
+
+static sem_t semitems;
+static sem_t semslots;
+static sem_t seminput;
+
+pthread_t thid1,thid2,thid3,thid4;
+int cnt=0;
+char indata[20],outdata[20];
+
+void *input_thread(void *arg)
+{
+	int ret;
+	char str[20];	
+	while(1)
+	{	
+		printf("enter the value of a: ");
+		fflush(stdout);
+
+		ret=fgets(str,sizeof(str),stdin);
+		if(ret==0)	exit(1);
+		pthread_mutex_lock(&input_buffer_lock);
+	
+     		strncpy(indata,str,sizeof(indata));
+		cnt++;
+     		pthread_mutex_unlock(&input_buffer_lock);
+	
+	}
+	pthread_exit(NULL);
+}
+
+void *op_thread(void *arg)
+{
+	int i=0;
+	char ch[20];
+	while(1)
+	{
+		pthread_mutex_lock(&op_buffer_lock);
+	while(cnt!=0){	
+		for(i=0;indata[i]!='\0';i++)
+			ch[i]=indata[i]-32;
+		ch[i]='\0';
+
+		strncpy(outdata,ch,sizeof(ch));
+		printf("ans: %s",outdata);
+		fflush(stdout);
+		cnt--;
+	}
+		pthread_mutex_unlock(&op_buffer_lock);
+	}
+	pthread_exit(NULL);
+}
+void *disp_thread(void *arg)
+{
+	/*while(1)
+	{
+		pthread_mutex_lock(&op_buffer_lock);
+		
+		//strncpy(outdata,ch,sizeof(ch));
+		fflush(stdout);
+		printf("ans: %s",outdata);
+		pthread_mutex_unlock(&op_buffer_lock);
+	}*/
+	pthread_exit(NULL);
+}
+	
+int main()
+{
+
+   int ret;
+
+   sigset_t set1,set2;
+   //block all signals in the signal mask field of the main thread !!    
+
+   sigfillset(&set1);
+
+   sigprocmask(SIG_BLOCK,&set1,&set2);
+
+   ret = pthread_create(&thid1,NULL,input_thread,NULL);
+   if(ret>0) { printf("error in thread creation for consumer\n"); exit(1); }
+
+ret = pthread_create(&thid3,NULL,disp_thread,NULL);
+   if(ret>0) { printf("error in thread creation for producer\n"); exit(4); }   
+
+  ret = pthread_create(&thid2,NULL,op_thread,NULL);
+   if(ret>0) { printf("error in thread creation for consumer\n"); exit(2); } 
+
+
+pthread_join(thid1,NULL);  //current thread will block until 
+                              //thread with id thid1 terminates 
+
+   pthread_join(thid2,NULL);
+
+   pthread_join(thid3,NULL);
+   
+   pthread_join(thid4,NULL);
+
+   exit(0);
+
+}
+

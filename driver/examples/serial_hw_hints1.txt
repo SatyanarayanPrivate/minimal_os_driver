@@ -1,0 +1,39 @@
+
+serial hw hints - special registers/bits 
+========================================
+
+1. if hw FIFOs are enabled in FCR, bits 6 and 7 of IIR must 11 - we can conclude that it is 16550 controller series 
+
+                                                               - if IIR 6 and 7 are 00, buffers are not available
+                                                                 and the chipset is of an older type
+
+2. hw register at base + offset 7 is designated as scratch register in 16450 controller series and higher versions
+                                                           
+                                                               - by writing and reading from it, we can test the
+                                                                 presence of these controllers - do this only after
+                                                                 locking the ports using request_resgion() or 
+                                                                 a similar call
+
+3. setting bit4 of MCR puts the UART in loop-back mode, which enables reading transmitted data at the receive buffer.
+   loop-back allows you to test a controller by writing and reading the result given back - no data is sent out or
+   received
+
+4. following is the typical initialization for most controllers - including the ones with bugs/problems:
+
+     - after locking the port and related addresses, test the presence of scratch pad and FIFO using the
+       techniques described above
+     - turn-off the FIFO
+     - read a bytes
+     - enable FIFO + set trigger-level(do not reset)
+     - enable FIFO + set trigger-level + reset tx FIFO + reset rx FIFO
+     - enable DLAB bit (only) in LCR
+     - set the LSB of divisor at offset 0 
+     - set the MSB of divisor at offset 1
+     - set 8-bit data + set no parity + 1 stop bit + disable DLAB bit
+     - reset interrupt generation in IER      //if you need interrupt generation - set appropriate bits
+     - set loop-back mode in MCR(only)        
+     - read the LSR                           //we are reading the status registers just as a 
+     - read the RX buffer register            //convention that is recommended for most hw controllers
+     - read the IIR register
+     - read the MSR
+   

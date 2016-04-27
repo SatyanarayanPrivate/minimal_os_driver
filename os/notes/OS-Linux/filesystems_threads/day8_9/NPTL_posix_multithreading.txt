@@ -1,0 +1,196 @@
+1. NPTL is the name of the library used to implement POSIX threading
+   in a Linux system - as an interesting fact, it was finalized and implemented
+   as late as 2003 !!!
+
+2. once NPTL is implemented, most threading concepts are available 
+   in linux library - there may be a few differences due to 
+   the underlying implementation differences, but most of the threading
+   features are available 
+
+
+3. best source of info. on these APIs are provided via manual pages
+   - these manual pages are much better than normal system call 
+   manual pages
+
+4. most APIs are better understood by examples and coding !!!  
+    - follow the examples
+
+5. termination of a NPTL thread in linux:
+
+      - normal termination of thread can be achieved using 
+        pthread_exit(???) - depending upon your requirement,
+        you may pass NULL or a pointer of an object which 
+        may contain certain results - there are other tricks
+        - you may see it in some sample code
+        - it is the responsibility of the developer to free
+          all resources/locks, before pthread_exit() !!!
+      - abnormal termination 
+
+          - first case is based on exceptions - in this case
+            , if one thread encounters exception, all threads
+            and the process are terminated 
+          - another case could be a SIGKILL is generated for 
+            a thread, all threads and process will be terminated
+          - there is yet another case using pthead_cancel() request
+            - this is not based on signals - this is based on 
+              threading library implementation 
+            - in this case, a single thread or a set of threads of 
+              a process may be forcibly terminated by generating
+              pthread_cancel(target threadid) - if a thread of 
+              a process generates pthread_cancel() for another
+              thread of the same process( it must be so), library 
+              will notify the target thread's user-space thread
+              descr. - whenever the target thread is scheduled and
+              executes, it may come across certain thread library 
+              APIs , which are known as cancellation points !!!
+              - refer to man 3 pthread_cancel() for more details
+                on thread cancellation and mechanism details !!!
+              - when these cancellation points are encountered, 
+                a particular target thread is terminated forcibly
+              - in addition, its resources are not freed by 
+                default - in order to free the resource held by 
+                by a thread during forced cancellation, cancellation
+                handlers must be installed by the developers, in 
+                advance, if such cancellation requests are designed
+                in the application !!!
+              - unlike signals, cancellation requests do not bring down 
+                the entire process and can be selectively used -
+              - signals were designed mainly for processes and infrastructure
+                of multithreaded process still supports signals for
+                process context and minimally supports for threads !!
+              - given this scenario, signals are preferred to handle
+                process level requirements and not thread level 
+                requirements - for the thread level requirements, 
+                cancel request is the best bet - in short,avoid
+                using signals between threads of a process and you 
+                may still use process to process signalling - in 
+                addition, system may use system to process signalling
+                and system to thread signalling, as needed !!!  
+                 
+6. joinable threads vs detached threads :
+
+   - a joinable thread can be joined by main thread or any sibling 
+     thread of a process - this can be useful for synchronizing 
+     threads and as well collecting results from threads 
+
+   - there may be special cases, where several threads may be 
+     needed dynamically, in an application - joining and managing
+     all these numerous threads may not be practical - for these
+     scenarios, library provides another attribute - detached 
+     threads - these threads cannot be joined and when they terminate,
+     library takes care of there clean - up - again, it must 
+     be decided by the developer, whether a thread must be created
+     as joinable or detached !!!
+
+
+
+7. we have understood that system treats all threads of all processes
+   using common scheduling queues - one per processor - depending upon
+   the scheduling policy, all threads of all processes may be treated
+   as per respective scheduling parameters !!! 
+       - if a particular process requires more time share within
+         the system, it can be easily passed by appropriately 
+         tuning the nice values of the threads of the process
+            - use setpriority() , appropriately !!! see the
+              manual page !!!
+
+            - setpriority() is not standardized for threads - 
+              it is still process based
+
+
+      
+       - if a particular requires high importance within the system,
+         it can be easily done by changing the scheduling policy 
+         and real-time priority of the main thread before creation
+         of other sibling threads - as we understood in the examples,
+         by default, sibling threads will inherit scheduling policy 
+         and parameters of the creating thread !!!
+             - pthread_attr_setschedpolicy()
+             - pthread_attr_setschedparam() 
+            - these above APIs are well standardized for threads
+            - there are seperate APIs for processes 
+
+        - if APIs are well standardized, implementation issues
+          are not problem - if not ,developer must understand
+          implementation issues !!!
+ 
+
+8. there are certain references which give a detailed description
+   and examples as how to use threads for different problems - 
+   references are in different domains - still, there are a few
+   references, which are generic and can be used by any 
+   developer to start with - one such reference is - Threads Primer
+   by Sun developers !!! search Threads Primer and you will get a
+   copy of it !!!
+   - however, we will see certain examples in this context and
+     others, as needed !!1
+
+
+9. you may use process related system calls, in a multithreaded 
+   application/process provided, you understand the implications
+   and use it appropriately - a few cases are mentioned below - 
+   for others, you may learn as needed: 
+      
+      - you can use fork(), if you use it in a multithreaded 
+        application, before creating new threads !!!
+        - if you use fork() after creating new threads, new
+          process will inherit the current thread of the parent process
+          that was used to invoke fork() system call - other threads
+          do not get inherited and any locking mechanisms are 
+          not properly managed !!!   
+      - when you use execl()/or other related calls, all threads of 
+        the current process are destroyed, but for the current thread
+        from which execl() is invoked - in addition, current program
+        is destroyed and a new program is loaded - the thread that 
+        is retained will be the main thread of the process and 
+        will resume execution of the main() of the newly loaded
+        program - it is now the responsibility of the newly loaded
+        program to create further threads, if needed - once again, 
+        there must be  a valid reason for doing this !! otherwise,
+        does not make much sense !!! 
+      - if you ever want to terminate a multithreaded process
+        normally, use exit() 
+      - if you ever want to terminate a thread in a multithreaded
+        process, use pthread_exit() - it is the responsibility of
+        the developer to free all locks and resources, before 
+        invoking pthread_exit() !!! 
+     
+
+10. if you are dealing with pthread_cancel() and forced termination
+    of a thread within a process, following APIs are useful:
+        - pthread_cancel() is managed by the library with the
+          help of system call APIs !!!
+
+        - pthread_cancel() - using this a target thread of this
+                             process can be cancelled - some time
+                             in the future, the target thread will
+                             be terminated
+        - pthread_cleanup_push() - using this API, you may install
+                                   one or more cleanup handlers,
+                                   in the appropriate thread that
+                                   may be cancelled 
+                                 - these cancellation handlers will
+                                   be executed, if the target thread
+                                   is forcibly terminated !!!
+        - in certain cases, you may wish to uninstall the clean up 
+          handlers, in your code !! in these cases, you have to 
+          use pthread_cleanup_pop(0) - look into the parameter - 0
+          or 1 may be used appropriately !!!! 
+
+        - pthread_cancel() generates a cancellation request in the 
+          target thread's library thread descriptor !!
+        - some time in the future, the target thread may be scheduled
+          - when the target thread is scheduled, certain library APIs
+          may be invoked and they may scan the cancel pending field of 
+          the target thread - such APIs are known as cancellation points
+          - when a cancellation point is encountered, it will check 
+          for cancellation request and terminate the respective 
+          target thread, abnormally !!! in addition, the cancellation 
+          point API will also execute cancellation handlers - these 
+          cancellation handlers will free any resources held by the
+          thread and also free any locks held by the thread !!! 
+        - contrast this with signals and signal handling - we will 
+          see more details soon !!!
+
+  
+

@@ -1,0 +1,159 @@
+DESD
+====
+
+1. operating system concepts - your background - which 
+   is typically electronics !!! theory part 
+      - lot of reading and analysis
+      - read class notes
+      - read references
+      - professional papers/documents
+             - conference papers published on upcoming technologies !!!
+                   - a theory part 
+                   - implementation / practicals !!!
+
+2. operating system related programming and implementation
+   details !!! practical part 
+      - assignments
+      - lab time 
+      - consolidate your understanding
+      - pick up your skills !!!
+
+
+3. most concepts and techniques will be new(common case - exceptions
+                                            do occur  !!!)
+
+    - class notes and teacher 
+    - good references  
+
+4. all modules are related and linked - initial modules
+   are linked to advanced modules - act as base or foundation !!
+    - each teacher will teach a module or 2 - responsibility 
+      is with respective modules 
+    - connecting the modules is the responsibility of the
+      students !!! 
+    - complaints :
+            - i am new to programming - high-level languages
+                     sequential programming  - practice !!!
+            - i am new to os related programming - 
+                     concurrent programming 
+            - combining h/w and s/w interactions in programming
+                  - 8-bit processors
+                  - 32-bit processors - ARM processors 
+                         - Linux is very popular in ARM processors
+                              - os concepts
+                              - C/C++ programming
+                              - assembly 
+                              - Linux programming
+                              - Linux drivers/system programming 
+                              - ????
+                   - h/w platform knowledge - buses/device controllers 
+                   - you need certain micro level details and
+                     certain macro level details !!!        
+5. how to gain proper skills and clear knowledge - related problems???
+            - speed / pace of the course !!!! 16hrs per day !!!
+            - never miss a class/lab 
+            - clear class notes along with references/texts 
+            - analysis 
+            - complete your assignments 
+            - interact with the teacher to clear doubts and 
+              note down the details !!!
+                   - completing your reading
+                   - after attempting your assignments !!
+            - document everything and read your documents !!
+            - do your project sincerely !!!
+                 - most students are not capable of doing projects !!!
+                 - take up a small part of a larger project 
+                   and do it properly !!!
+                
+
+DSSD
+====
+
+1. operating system concepts - your background - which 
+   is typically computing !!! theory part 
+      - most of what you know may be theoretical and
+        at times, outdated !!!
+      - lot of reading and analysis
+      - read class notes
+      - read references
+      - professional papers/documents
+
+2. operating system related programming and implementation
+   details !!! practical part 
+      - you may not have enough background !!!
+      - assignments
+      - lab time 
+
+
+3. most concepts and techniques will be new !!!
+
+    - class notes and teacher 
+    - good references  
+
+4. all modules are related and linked - initial modules
+   are linked to advanced modules - act as base or foundation !!
+    - each teacher will teach a module or 2 - responsibility 
+      is with respective modules 
+    - connecting the modules is the responsibility of the
+      students !!! 
+    - complaints :
+            - i am new to programming - high-level languages
+                     sequential programming  
+            - i am new to os related programming - 
+                     concurrent programming 
+            - combining h/w and s/w interactions in programming
+                  - 32-bit processors - ARM processors(optional) 
+                         - Linux is very popular in ARM processors
+                              - os concepts
+                              - C/C++ programming
+                              - assembly 
+                              - Linux programming
+                              - Linux drivers/system programming
+                              - parallel programming
+                              - HPC computing 
+                              - windows drivers  
+                              - ????
+                   - h/w platform knowledge - buses/device controllers  
+                   - project is very important !!!       
+5. how to gain proper skills and clear knowledge - related problems???
+     - speed / pace of the course !!!!
+            - never miss a class/lab 
+            - clear class notes along with references/texts 
+            - analysis 
+            - complete your assignments 
+            - interact with the teacher to clear doubts and 
+              note down the details !!!
+                   - completing your reading
+                   - after attempting your assignments !!
+            - document everything and read your documents !!
+            - there must not be lack of efforts !!!
+
+6. Divesd specifics!!!
+     - a pci chip set !!!
+     - who will use it ???
+            - a computing system !!!
+                - may be embedded or may not be !!!
+            - which component of the computing system will be 
+              controlling and managing the pci controller ??
+                   - I/O subsystem of the OS and respective 
+                     drivers !!!
+                      - how will they do it ???
+                           - this will be learnt when you learn
+                             about I/O subsystems and device drivers !!!
+                           - you need not learn OS concepts and 
+                             programming - please come to drivers
+                             sessions after one month !!!
+                                             
+
+
+
+
+
+
+
+
+
+
+
+
+

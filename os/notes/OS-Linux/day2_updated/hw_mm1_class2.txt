@@ -1,0 +1,648 @@
+1. as we saw in the case of process management, modern 
+   processors support logical / virtual addresses - 
+   these are inturn exploited by operating system and
+    passed on to processes/applications 
+
+2. logical addresses are translated by processors
+   and physical addresses are used to actually access
+   physical memory 
+
+3. translation of a given logical adddress to corresponding 
+   physical address is a run time activity and depends
+   on the allocation of physical memory regions to a process
+   and where the process is loaded !!!
+
+4. the above may be achieved using different hw techniques:
+   
+    - processor may support one set of mmeory mapping 
+      registers - base and bound
+    - processor may support a set of memmory mapping 
+      registers - meaning, several base/bound registers
+      maintained in a table - this is known as segment table -
+      this approach is known segment based mm 
+    - processor may support a modified version of the second
+      approach, where segments are of equal size - this approach
+      is known as page based mm  
+   
+
+
+5. let us assume that we have a simple processor 
+   which supports a single base and bound register - it will 
+   have the following features:
+     - a process cannot be allocated non-contiguous free 
+       memory regions !!!    
+     - a process must be allocated a contiguous physical 
+       memory region - if the process is very large or 
+       contiguous phy mm regions are not available, 
+       a process may be not be loaded
+     - this leads to external fragmentation - in this state,
+       several non contigiuous phy mem regions are present 
+       in the system - due to our hw mm technique, 
+       we cannot allocate memory to processes which require
+       larger phy memory, but cannot allocate non contigiuous memory 
+       regions !!!
+     - whenever a process switch occurs, base and bound 
+       registers of the processor are loaded with the
+       new set of values of the incoming process!!
+     - in this scheme of phy mm, external fragmentation
+       creates wastage of memory - this problem is 
+       commonly known as external fragmentation !!
+     - compaction may be used to overcome this kind of 
+       a problem !!! but, compaction is expensive and 
+       not an acceptable solution for implementations !!! 
+     - for each process, base register's value is 
+       decided by the phy mm of the operating system - 
+       this information is stored in the pd of the process
+     - this informato=ion is loaded into the base/bound 
+       registers of the processor, when the process
+       is scheduled by the scheduler !!!   
+
+     - first fit, best fit and worst fit s/w mm techniques
+       are relevant in the context of external fragmentation !!!
+       - we may come across these techniques in other contexts -
+         we will discuss more, in those contexts !!! 
+
+
+6. in segment based mm, a segment table is allocated per process
+   and several segment entries are managed in the table - each 
+   entry contains a base/bound register set - it may also 
+   contain other attributes - in addition, following rules/features
+   are present :
+
+    - can we divide logical address space of a process/application 
+      into logical segments - what is the meaning and how do we
+      do it reasonably ???
+       - no of segments of a process may depend on logical 
+         division of contents of a process - based on this 
+         division, each section is allocated a set of logical
+         addresses to manage the section - each such logical 
+         address range is known as a logical segment of the process
+       - if a section is assigned a logical segment - a group 
+         of addresses
+       - assuming several logical segments are allocated to 
+         a process - how many segment table entries are needed for
+         a process in its segment table - what is the use of 
+         segment table entries ????
+           - for each logical segment, one segment table entry 
+             is needed !!!   
+
+    - segment table is defined by the processor and maintained
+      in pd of each process
+    - when a process is scheduled on the processor, base address
+      of the segment table is loaded into a control register
+      of the processor !! processor does not store base/bound
+      registers - base/bound registers are stored in segment table-
+      processor just stores base address of the segment table of 
+      the process !!!
+    - when a process is loaded on the processor, logical addresss
+      are translated with the help of respective segment table entry 
+    - logical address space of each process is divided into logical
+      segments - each segment has a set of logical addresses assoicated
+      with it - each logical segment is associated with one 
+      segment table entry 
+    - run time translation of a logical address to physical 
+      address is done by MMU of the processor, which has 
+      access to segment table via a control register !!!
+    - if the above is true, what is the role of operating 
+      system in segment based mem. management ??
+        - to assign appropriate logical addresses/segments
+          to a process !!! any restrictions ???
+             - restricted by the width of the logical
+               address registers of the processor - in 
+              addition, operating system may also impose
+              certain restriction due to run-time 
+              requirements of the system !!! 
+        - not only assign logical addresses, also maintain
+          information about these addresses in the pd of 
+          the process !!
+        - allocate a segment table per process
+        - initialize base/bound registers of necessary entries
+          in the segment table !!!
+        - load the processor's control register with segment 
+          table base address during scheduling of a process !!
+     - by dividing a process into logical segments and mapping 
+       to several non contiguous physical segments, a single 
+       large contiguous phy mem region is not needed per process
+     - this minimizes wastage due to external fragmentation - 
+       however, effects of external fragmentation are not 
+       eliminated !! 
+     - in reality, sizes of logical segments of a process
+       and sizes of free physical segments of memory in the
+       system may not match , always - meaning, there will 
+       be mismatch and wastage due to this  
+     - no. of segments of a process and sizes of segments 
+       of a process need to be decided by the compiler or 
+       developer, in most cases - this may lead to inefficient 
+       implementation of segmentation for a process, as it 
+       is difficult to predict the parameters for all cases !!!
+         - it is a difficult question to answer and depends
+           on the system's current set of processes and 
+           system's current set of physical segments !!!
+         - it is due to such practical problems that 
+           page based memory management was introduced -
+           page based memory management is an improvised
+           form of segment based memory management !!1
+     - if you are interested, explore segment table 
+       details using developer's manuals of x86 processors !!! 
+
+7. page based memory management is similar to segment based
+   memory management with following changes and features - 
+   currently, most systems use page based memory management !!!
+    - here, segments are of fixed and equal size 
+    - a process is divided into logical pages - meaning, 
+      a logical address space of a process is divided 
+      into logical pages 
+    - page size is typically 4KiB - although, other page sizes
+      are supported by hw, 4Kib is still very popular and 
+      efficient !!!
+               - 4Mib page size and 2Mib page size are 
+                 popular in system space 
+               - these page sizes are used to manage 
+                 system space code/data by operating system 
+               - in addition, for applications, certain 
+                 sections may be allowed to use such large
+                 pages using a special set of system call APIs !!!
+               - page size is also decided by underlying 
+                 architecture - if you happen to work on 
+                 different architectures, you may encounter 
+                 other page sizes !!!
+    - if the page size is fixed and logical page size is fixed, 
+      division of a process into logical pages is implicit and 
+      no explicit effort is needed by os/compiler / developer !!!
+    - total physical memory of the system is divided into 
+      page size entities - these page size entities are knonwn 
+      as page frames 
+    - it is the responsibility of the operating system memory 
+      manager to allocated page frames to processes as needed - 
+      that is the role of page based phy memory manager !!!
+    - every process is allocated a page - table - each page 
+      table contains several entires - page table entires -
+      ptes contain base address of a page frame and certain 
+      attribute bits !!!
+           -any differences between page table and segment table ???
+               - compared to segment table, page table 
+                 may need large set of page table entires
+               - page table entries do not need limit
+                 registers - meaning, page size is fixed !!! 
+               - because of large size of page tables, further
+                 improvised techniques are used !!!
+    - whenever a process is scheduled, it is the responsibilituy 
+      of the scheduler to load the base address of the page table
+      of the process into a control register of the processor !!!
+    - effects due to external fragmentation on a process are
+      eliminated - still, external fragmentation occurs !!!
+      problem is solved for processes, not the entire system!!!
+
+             - any logical page of any process can be mapped 
+               to any page frame in the system - although,
+               this is a theortical conclusion, practically 
+               there may be certain restrictions - we will 
+               see more of this during system space programming !!!
+
+    - before we look into problems in page based memory management,
+      let us understand a bit more on ptes !!!
+       - although the physical addresses are 32-bits, 20 bits
+         are stored in a pte, not 32 bits - why ??
+            - see below 
+            - 12 least significant bits are set to 0s -
+              they need not be stored - 12 bits are saved
+              in the pte for storing other attributes !!!
+       
+       - apart from the base address of the page frame, 
+         pte also contains P - present bit and 
+         protection bits !!!
+
+            - what is the role of P - present bit or valid 
+              bit  in pte ?? if P bit is 1, pte entry is said
+              to be valid and used by MMU - if P bit 0, pte 
+              entry is invalid and MMU will generate page 
+              fault exception !!! it is the responsibility
+              of operating system to modify P bit appropriately !!! 
+                - similar tp segment table and segment table 
+                  entries, no. of page table entries will be
+                  dependent on the logical pages of a process - 
+                  meaning, no of valid ptes will be defined 
+                  by no of logical pages used by a process -
+                  no of logical pages used by a process is
+                  dependent on the size of the process and
+                  sections of the process !!!               
+
+ 
+                - for which ptes, P bit will be set to one by
+                  OS ?
+                     - this is set of ptes that are corresponding 
+                       to logical pages that are loaded into 
+                       main memory and page frames are allocated-
+                       meaning, if page frames are allocated,
+                       corresponding pages are loaded in memory as well !!!
+                     
+                     - in addition, there is one more aspect that 
+                       must be understood - in a given computing 
+                       system, based on hw architecture and operating 
+                       system configuration,maximum logical address space
+                       that is available for a process is assigned to 
+                       the process, but process uses what it needs - 
+                       meaning, several logical pages are used and 
+                       several other logical pages are unused - used
+                       logical pages are typically associated with 
+                       valid ptes - unused logical pages are typically 
+                       associated with invalid ptes !!! 
+                     - for a given hw architecture and a given OS 
+                       configuration, a max. process address space
+                       is defined - for a 32 bit system, it may 
+                       be 3 Gib or 2Gib depending upon OS configuration -
+                       for a 64 bit system, it may be in terabytes - 
+                       it may be 128TB !!!
+                     - in the above cases, a process/application 
+                       may use part of the address space to map 
+                       its logical pages or use entire address space
+                       to map its logical pages - that depends on 
+                       how many logical pages are in the process !!!
+                     - let us assume that a process size is 
+                       256 Kib ??
+                         - how many logical pages are needed ??
+                     - let us assume that a process size is 
+                       256Mib ??
+                         - how many logical pages are needed ??
+                     - let us assume that a process is of 2Gib
+                       size - how many logical pages are needed ??
+                         - ??
+                     - try to map you understanding to the 
+                       process address space diagram in the 
+                       slides !!
+                - for which ptes, P bit will be set to 0 by 
+                  OS ? 
+                     - for those pages of a process that are 
+                       not loaded into main memory and page frames
+                       are not allocated - meaning, if page frames
+                       are not allocated, corresponding pages
+                       are not loaded into main memory and their
+                       ptes are invalid !!!
+                     - invalid logical pages are associated with 
+                       invalid ptes !!!
+                               
+                - due to hw peculiarities, page table size and 
+                  no of ptes in the page table are fixed as 
+                  per max. logical address space scope for
+                  a process in the computing system !!! due 
+                  to this, for a smaller process, several 
+                  ptes will be invalid - for a larger process
+                  , several ptes will be valid !!!
+                - if max. process address space scope is 
+                  4GiB, how many entries must be supported 
+                  in a page table ??? assume 4Kib page size !!!
+                     - 1 Mi entries !!!
+                     - for 1Mi entries per page table of a process,
+                     
+                       page table size = 1Mi * 32bits(4bytes) = 4Mib 
+                       - is this overhead acceptable ???
+                          - unacceptable and other page table 
+                            techniques were invented !!! see below                     
+ 
+                    - based on your process size, some of the
+                       entries will be valid and many will be 
+                       invalid 
+                     - how many will be valid for 256Kib process ??
+                     - how many will be valid for 256Mib process ??
+                     - """                        2Gib process ??? 
+
+ 
+
+            - protection bits associated with a pte define
+              access permissions allowed on the associated
+              logical page and page frame - meaning, protection
+              bits can enforce read only access, r/w access,
+              and many more - it is the responsibility of the 
+              operating system to set the protection bits of 
+              ptes as needed !!
+                   - what is the use of such protection bits ??
+                   - can you map it to an application's 
+                     advantage ???
+                      - to implement write protected code
+                        area 
+                      - to implement write protected data 
+                        areas !!
+                      - this mechanism may be extended 
+                        to protect sensitive data in an application !!!
+
+       - a typical pte is of 32 bits size 
+
+       - let the logical address be 0x0804 8000 - what is 
+         the logical page assoicated with this - meaning,
+         logical page no ??
+
+                   0x08048 is the logical page no !!!
+
+       - in the above case, what is the offset associated 
+         with the logical page ??
+
+                   0x000 is the offset associated 
+
+
+       - let us assume the page frame base address is 
+           0x0001 2000 
+              - 0x00012 will be stored as page frame no
+                in the pte 
+              - last 12 bits are dropped - because they 
+                are any way 000s - since 0s are still needed
+                eventually, they will dropped and added when 
+                needed !!!          
+   
+       - during translation, logical page frame no. is used
+         to index into the page table and extract pte - 
+         once extracted, page frame base address is constructed
+         by adding 12 0s to the page frame no - after this,
+         offset of the logical address is added to the 
+         page frame base address - end result is physical
+         memory address !!! 
+       - based on the above example, explore the translations
+         and mappings of different logical addresses to 
+         physical addresses 
+       - logical addresses of a logical page are mapped to physical
+         addresses of a page frame with help of a single pte 
+         entry - meaning, if the page frame size is 4096 bytes, 
+         4096 logical addresses of a logical page are mapped 
+         to 4096 physical addresses of a page frame !!!
+       - what is the maximum size of logical address space
+         allowed for a process ?? 
+               - approx 3GiB
+
+            what does this no. depend on ?? processor's
+                 logical address width and os implementation !!
+
+
+       - how many logical address spaces can exist in the system 
+         - how are several logical address spaces of several processes
+         managed in the system ??
+
+                - as many as we want , but only one logical address
+                  space is actively used by processor !!! 
+
+
+       - how is the size of a process related to logical address
+         space of a process ?? 
+
+                - each byte of the process needs one logical address
+
+
+       - how is the page table of a process
+         related  to size of a process ??
+
+             - no of ptes is directly proportional of logical 
+               pages of the process, which in turn is dependent
+               on size of the process and page size of the system !!
+
+       - what is the largest application /process that may be 
+         executed in  a 32bit system ??
+             - ideally, the answer is 4GiB (2 power 32)
+             - due to practical reasons and operating system
+               implementation, it is approx 3GiB - if a 3GiB 
+               process is active what will be the size of 
+               its logical address space !!! same as 
+               size of the process !!!
+
+       - in each process, total address space available is 4Gib
+         in a 32-bit system - other hw architectures may provide
+         larger address spaces !!!
+       - in the 4Gib total space, 1Gib or 2Gib is reserved for 
+         system space, in each process - this means, logical addresses
+         in this 1Gib or 2Gib are used for system space code /data - 
+         this also means, certain secondary page tables of a process
+         are dedicated to map 1Gib or 2Gib of the process to system space
+         page frames - meaning, page frames used to load system space code
+         and data !!!
+       - this also means, certain page tables of every process are used
+         to map to the same set of page frames, which are holding system 
+         space code and system space data !!!
+       - all user-space ptes of a process are assigned u/s bit 1 and
+         all system space ptes of a process are assigned u/s bit 0 
+       - whenever user-space code is executing, processor is less
+         priviliged mode of execution - if code of user-space attempts 
+         to access some memory location in system space, process will 
+         generate exception due to privilige violation - operating system 
+         will terminate such a process !!!
+       - if code of system space attempts to access a memory location 
+         of user-space, it will be allowed - of course, there are rules
+         and restrictions for this operation - you will understand and
+         use these during system space programming !!! 
+
+
+        - multi-level page tables vs single level page table ??
+
+          - if single level page table is used to map logical 
+            addresses of a process to physical addresses of 
+            page frames, very large amount of memory is wasted       
+            in managing / maintaining page tables 
+
+          - the above problem can be minimized by using 
+            multilevel page tables - we will be discussing 
+            with the help of 2 level page tables - in reality,
+            there are 3 level and 4 level as well !!!
+
+          - as per h/w design single level page table 
+            must support max. logical address space 
+            supported by hw - for example, in a 32bit system,
+            4GiB is the max. logical address space and 
+            page size is 4KiB - what will be the size of 
+            single level page table per process ?? 
+                - size of a page table is 4MiB per 
+                  process 
+                - overhead of a single level page 
+                  table is very high - unacceptable 
+
+          - this where, multilevel page tables were introduced
+          - there will be a primary page table and several secondary 
+            page tables - no. of secondary page tables is dependent 
+            on the process size 
+          - primary page table entries are used to map secondary
+            page tables - secondary page table entries are used
+           to map the real page frames !!!
+          - primary page table size is typically 4KiB - its role
+            is to store base addresses of secondary page tables -
+            secondary page tables are of 4KiB in size - role of 
+            secondary page tables is to store base addresses/attributes
+            of page frames !!!
+          - no. of entries per primary page table is 1024 and 
+            no. of entries in secondary page table is 1024 
+              - for a process with vsz = 32KiB,
+                primary + secondary page tables size = 8KIB 
+              - for vsz = 32MiB, what is the size
+                needed for primary and secondary page tables ??
+                         36KiB is the memory needed 
+          - this scheme uses memory efficiently for 
+            page tables !!!
+
+          - givena logical address, first 10 bits are used to 
+            index into primary page table to fetch the base
+            address of secondary page table - next 10 bits
+            of logical address are used to fetch pte in the 
+            secondary page table - next 12 bits are treated 
+            as offset to be added to the base address of th e
+            page frame extracted from pte of the secondary 
+            page table - this is the translated physical address !!!
+
+         - one more attribute field in the pte is of interest - 
+           this bit is known as u/s bit, which decides whether
+           the logical page / page frame associated belongs 
+           to user-space or system space - if u/s bit is set 
+           to 0, logical page and page frame belong to 
+           system space - if u/s bit is set to 1, logical page
+           and page frame belong to user-space !!!
+               - how certain ptes are allocated and managed for 
+                 process address space ?? user-space
+               - how certain ptes are allocated and managed for 
+                 system space ?? system space 
+               - these are questions to be addressed and this
+                 is done by the operating system using certain 
+                 techniques - for examples, ptes of a page table 
+                 of a process may be reserved for user-space and
+                 certain ptes of a process may be reserved for 
+                 system space !!!
+
+         - is it possible to visualize user-space vs system space
+           with th e help of page tables and ptes !!1
+           - for ptes in secondary page tables that are used to 
+             manage page frames of a process, u/s bit is set to 1 - 
+             these page frames belong to user-space
+           - for ptes in secondary page tables that are used to 
+             manage page frames of system space, u/s bit is set to 0-
+             these page frames belong to system space !!
+
+         - in most modern operating systems, part of the logical 
+           address space of a process is used for user-space 
+           of the process and the other part is used for system 
+           space - this is true for every process in the system -
+           how is this achieved ??? 
+             - for example 3GiB may be dedicated for user-space
+               and 1GiB may dedicated for system space - this 
+               can from system to system !!!
+             - certain secondary page tables of each process
+               are dedicated to managing / mapping logical 
+               pages of the system to page frames of the system - 
+               meaning, u/s bit will be set to 0 in these ptes
+             - these logical addresses are only used by kernel 
+               code / data - never used by user-space 
+             - these dedicated secondary page table entries
+               of processes map to the same set of page frames, 
+               which are used by system space to load system 
+               space code and data !!!  
+
+          - for a process that is using logical addresss space 
+            , logical pages and logical addresses, following is 
+            true :
+                - a process address space is divided into logical
+                  segments - these logical segments are divided 
+                  into logical pages - these logical pages are
+                  managed using page tables !!!
+                - every logical page has an associated page frame
+                  and once associated, this is fixed !!
+                - this means,content of every logical page is 
+                  loaded into main memory 
+                - logical address space is managed with the help
+                  of descriptors in pd - these descrs. are maintained
+                  as part of mm struct / object !! 
+                - no. of descriptors used to describe logical 
+                  address space of the process is dependent on 
+                  no .of sections in the process - typically, it 
+                  may be 5 or more !!1
+                - each such descriptor describes the range of 
+                  associated logical addresses and other attributes
+                - for a given descriptor, a set of secondary page
+                  tables are managed - certain attributes of ptes
+                  in these secondary page tables are controlled 
+                  by attributes stored in address space descriptors !!!
+                - the use of these descriptors will be more 
+                  clear when we discuss virtual memory management !!!
+          
+8. TLB is a form of cache memory in the processor used for 
+   speeding up virtual address to physical address translations - 
+   in the absence of TLBs, all translations by the processor 
+   require page table access - in a multilevel page table access,
+   several page tables may be accessed - this will lead to higher
+   memory access latencies - to give you a perspective let us 
+   see one scenario - if memory access time is say 10ns - if 2 page
+   tables must be accessed for address translation, memory access 
+   time will be 30ns, instead of 10ns - ideally, you may wonder what 
+   has 30ns vs 10ns has got to do with humans !! this is not for us - 
+   this is for the computing system - say, your computer can work 
+   1/3 the speed of its actual - that is the difference !!!
+Note: for a typical student, each TLB contains a virtual page no and
+      corresponding pte - meaning, each TLB stores a virtual page no
+      and corresponding pte !!! 
+
+   - best way to understand TLB cache is with an example :
+      - let us assume we are accessing a logical page of a
+        process for the first time after its creation -
+        if the logical page is accessed, processor will do the following:
+          - divided logical address onto index and tag 
+          - using index will select a set of TLB entries in the TLB cache
+          - once the set is selected, simultaneously scan all entries
+            for a matching tag - if there is hit and the entry is valid, 
+            pte cached in the TLB entry is used by the processor - accessing
+            a TLB entry is very fast compared to external memory access !!!
+          - in our case, there will be a miss - processor will access 
+            page tables and retrieve pte and use it - in addition, it 
+            will cache the pte entry in a TLB entry and update the settings !!!
+          - if our process attempts to access logical addresses of the 
+            current logical page in the future, processor will see a hit 
+            in a TLB entry and several page table accesses are avoided !!!
+          - no of entries in the TLB cache is fixed - say, 64 or 128 - 
+            which means, at any point of time, only 64 or 128 entries
+            are maintained 
+          - still, performance will be very good, if process follows
+            principle of locality  - meaning, it attempts to use 
+            logical pages that local in space and time !!! ofcourse, 
+            this has been proven statistically that most applications
+            follow principle of locality and will do so !!!
+          - whenever there is a process switch, it is the responsibility
+            of operating system and hw to invalidate all the TLB entries
+            of the TLB cache and rebuild the TLB cache for the 
+            newly loaded process !! this cycle continues !!!  
+          
+9. in addition, processor also contains data cache and instruction cache - 
+   in fact, there are several levels of data and instruction caches - 
+   in our discussion, we will stick to first level only - you may explore
+   the working of other levels as needed !!!
+
+   - first level cache is known as L1 cache 
+   - instruction cache is used to store recently accessed instructions
+   - data cache is used to store recently accessed data items 
+   - once again, d and i caches can speed up performance of 
+     a processor along with TLB cache - this is once again due
+     to avoiding external memory access !!! 
+   - organization and working of i and d caches are similar to 
+     TLB cache, but content that stored in i and d caches is not 
+     ptes - so, additional translation is needed to retrieve data
+     or instruction 
+   - say, a modern day i / d cache may store 64 bytes of content 
+     per entry - if we are looking at data, 8 integers can be 
+     stored per entry !!!content stored in a i / d cache entry 
+     is known as cache line / cache line size !!!
+Note: cache memory improves performance of the processor and
+      in particular modern processors use a technique 
+      known as prefetching and caching - in this case, instructions
+      and data are prefetched and cached - processor can have 
+      instructions and data just in time, when it needs it !!!
+   - let us say, we are accessing an integer in cache line 
+     of a d cache entry - following will occur :
+        - processor will translate logical address to physical address
+        - physical address is divided into index , tag and offset 
+        - index is used to select a set in the d - cache 
+        - tag is used to match a valid entry containing the same tag
+        - once above true, offset is used to retrieve data item 
+          from the corresponding cache line !!! 
+   - when there is  a process switch, d cache and i cache are not 
+     invalidated, but useless - the d cache and i cache are rebuilt
+     by replacing the entries with instructions and code from 
+     newly loaded process !!!
+
+
+
+
+
+
+
+
+
+
+

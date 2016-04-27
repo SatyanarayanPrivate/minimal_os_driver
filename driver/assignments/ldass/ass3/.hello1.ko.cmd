@@ -1,0 +1,1 @@
+cmd_/root/Desktop/hell/hello1.ko := ld -r -m elf_i386 -T /ldevdr/linux-2.6.34-12/scripts/module-common.lds --build-id -o /root/Desktop/hell/hello1.ko /root/Desktop/hell/hello1.o /root/Desktop/hell/hello1.mod.o

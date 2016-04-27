@@ -1,0 +1,186 @@
+1. do not break conventions - follow standard directories and 
+   files - if you have any doubts refer to the shell related pdf
+   in first day's folder 
+
+2. use commands like which and whereis to find where the standard
+   commands are stored in the system - this could be useful when you 
+   use execve() or execl() system call API !!!
+
+3. the other thing that will trouble you is the editor - refer to 
+   shell related pdf for commonly used commands of vi editor 
+
+4. you must also follow certain conventions when you use path names
+   of a file or an executable file !! in the case of a regular 
+   file, absolute pathname or relative path name are ok - in the 
+   case of executable file, a absolute pathname will work always-
+   for example, when your are launching a command/utility/application !!!
+
+    - in many cases, due to convenience, we use ./<executablefilename> - 
+      this works, but just <executablefilename> does not work - this 
+      is the peculiarity of shell and underlying system call APIs 
+    - if a particular director(including current directory) is part
+      of an environment variable known as PATH, bash/shell and underlying 
+      system call APIs can work with just the file name - please read
+      more about PATH environment variable to understand the above !!!
+    - PATH environment variable gives a certain type control when using 
+      the shell and other utilities !!! if you are a developer and using 
+      certain development tools/sdks, you need to set up PATH accordingly !!!
+    - PATH environment variable is maintained on a per shell process 
+      basis - meaning ,  a process running a shell instance will have
+      its own PATH env variable - there are many such rules in unix / linux-
+      get used to these rule with time !!! 
+
+5. 4th problem of assignment 2 :
+
+    - create as many child processes as needed from a common
+      parent process - in each child process, compile an 
+      object file of your larger application - say, file1.c will
+      be compiled to generate object file, file1.o , file2.c will be
+      compiled to generate file2.o and so on - each of these source
+      files will contain certain code - say a function - only one
+      source file will contain main() - main() will invoke functions
+      provided by other object files - in short, generate several 
+      object files and eventually, link them in the parent process
+      using another child process - you must complete the linking
+      process only if all the object files are created successfully  -
+      even if one object file fails, you must not link the object files -
+      instead, you must print the appropriate error and terminate the
+      parent process !!!
+    - in this context, children processes that are generating object 
+      files can execute concurrently without much control from the 
+      application - in fact, this is more efficient than executing
+      them sequentially !!!
+    - use waitpid(), to wait for each such child process and cleanup
+    - whenever you cleanup, if there is a failure of the child process,
+      record the information in a set of flags
+    - use these flags to decide to link all the object files, if 
+      there are no failures !!! if there is no error in these
+      children processes, create a new process to link 
+      all the object files !!! 
+    - once you have successfully linked the final program , create 
+      a new process from the parent process - launch the generated
+      application for the new process !!! do not launch/load a new
+      program in the current process !!!
+
+    - assuming that all the above is true, still you wish to understand
+      and investigate the flow of execution of processes - is this possible
+      ??? how can it be done ??? 
+           - time stamp based approach !!!
+           - can we single step using a debugger ???
+               - unlike sequential programming, controlling 
+                 several processes under a debugger is not 
+                 straightforward - we need one instance of 
+                 the debugger per process !!!
+
+           - debuggers cannot be conventionally used for 
+             concurrent applications - if you have localized      
+             your point of error/bug, it may be investigated
+             using a good debugger 
+           - one scenario where debuggers are useful is when 
+             an application crashes !!! crash point in an 
+             application is more of sequential programming aspect,
+             not concurrent programming aspect !!! 
+           - explore gnu debugger - known as gdb !!  
+
+    - this assignment involves the following:
+
+         - multitasking using fork() and execl()
+         - involves cleanup of children processes and investigating 
+           the respective termination status codes 
+         - involves parent process and children process co-ordination
+           and synchronization !!!   
+
+
+6. compilation procedure :
+ 
+   1) if you want to compile an executable file from a C source file,
+      do the following:
+
+           $gcc <sourcefile>.c  -o   <sourcefile>  (output file name should not contain .c 
+                                                    extension)
+
+   2) if you want to compile an object file from a C source file, 
+      do the following:
+
+           $gcc  -c   <sourcefile>.c  -o  <sourcefile>.o (output file name should contain
+                                                          a   .o)
+                                 
+   Note: also refer to class notes - I have compiled many times during the class on 
+                                     my system !!!!
+
+   3) if you have several object files, to link the object files, do the following:
+
+        $gcc <objecfile1>.o <objectfile2>.o ......<objectfilen>.o  -o  <finalexecname> 
+
+
+7. there are several manual page sections:
+     
+     1 - for system utilities
+     2 - for system call APIs
+     3 - for library APIs
+     5 - information on special files 
+     7 - information on mechanisms
+     8 - administrative utilities
+     9 - kernel space system APIs 
+   
+    - refer to shell related pdf !!
+ 
+    - explore more as needed !!! 
+
+
+8. following is true in a GPOS, when the normal scheduling policies and
+   normal processes/threads execute:
+
+    - order of execution and scheduling are non deterministic - although
+      there are rules and scheduling policies, they are not expected 
+      to provide rigid order of execution and scheduling decisions - 
+      many decisions may vary depending upon the current system's configuration
+      and load of applications !!!   
+    - for instance, child process may execute or parent process may execute
+      just after process creation - this is only true regarding process creation,
+      not after !!!
+    - one more way of putting this is that there may not be a fixed order
+      of execution of parent processes, if there are many in the system 
+      due to our application !!!
+
+    - in addition to the scheduler, other subsystems may also control 
+      execution order of the processes - this is not scheduling - this
+      is resource allocation related issues !!!
+    - in addition, due to application's own requirements, there may 
+      be locking and synchronization between processes/threads of 
+      an application !!!
+
+    - in these contexts, control points and preemption points can be
+      well understood, but exact decisions taken during those
+      control points are not fixed !!! due to this, order of execution 
+      of processes is unpredictable during the entire life cycle of
+      an application  !!!
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

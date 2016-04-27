@@ -1,0 +1,226 @@
+
+Note: the following are with respect to OS-A design oriented 
+                                           approach - charles / crowley 
+
+1. a modern processor uses 2 sets of addresses to manage memory -
+   first set is known as physical addresses and the corresponding 
+   range of addresses is known as physical address space - this 
+   is dependent on the underlying arch. 
+
+2. second set of addresses is known as logical addresses and corresponding
+   range of addresses is known as logical address space - this is also 
+   dependent on the underlying arch.
+
+3. kernel/process manager/scheduler  provide logical addresses to 
+   the processor during certain actions like dispatching and 
+   process creation - it is the responsibility of the processor 
+   to translate/map logical addresses to appropriate physical addresses-
+   in this translation/mapping, virtual memory manager/physical mm.
+   also play a role - we will see more of it during memory management !!!
+
+4. a processor may have a separate set of addresses known as I/O 
+   address space and these addresses are used to map and access 
+   registers / memory of I/O controllers 
+
+5. in certain processors, certain range of physical addresses are used
+   to map and access registers/memory of I/O controllers 
+
+6. refer to chapter 2 for details on h/w model used in this reference
+
+7. refer to chapter 3 for details of system call execution in the
+   h/w model of this reference
+
+8. refer to chapter 5 of this reference for understanding system call
+   . process creation, interrupt handling and scheduling - in this 
+   chapter, a simplified discussion is presented - for a more realistic
+   discussion, refer to chapter 6 of this reference 
+     - scheduling is not in detail - basic mechanism is described - 
+       we will see more of scheduling in class notes !!
+
+
+9. the following are details with respect to chapter 5 of this
+   reference :
+   - let us start from system call interrupt handler - this 
+     is invoked whenever any system call API is invoked 
+   - there is a pd table - one pd per process
+   - pd is highly simplified 
+   - each pd contains a save area to save registers of 
+     current execution context    
+   - normally, there will be one system stack per process - 
+     in this simplified discussion, there will be one system stack 
+     for all the processes !!!
+   - there is a current variable in system space which holds 
+     pid of the pd of the currently executing process !!
+   - there is a time-slice field in the pd which will be used
+     to implement time-slicing !!
+   - let us assume system call interrupt handler invokes
+     createprocesssysproc(), which is the system call system routine
+     for creating a new process - its functionality is described below:
+     - allocate a new pd from the pd table - if no pd is available
+       in the pd table, return error - system call APIs can fail,
+       if there are no sufficient resources !!
+     - allocate phy. memory resource for the process - ideally, 
+       this will be a variable resource component !!in this 
+       simplified example, it is a fixed resource 
+     - initialize most fields of pd with relevant values 
+     - read the program from the disk and load it into memory 
+       allocated for this process !!
+     - save area fields are initialized for a new process such
+       that this info. will be loaded into registers, when 
+       this process is scheduled for the first time - subsequently, 
+       current context of the process will be saved in save area 
+       of the process !!!
+     - psw field of the save area is initialized to 3 - bit0 is
+       set to 1 - meaning, process will be forced to execute 
+       with processor in less priviliged mode - bit1 is set to 1- 
+       meaning, process will be forced to execute with processor
+       executing with h/w interrupts enabled!!
+     - ia field of the save area is always initialized to 0(atleast
+       in this model) - meaning, ia is supposed to contain the starting
+       logical address of the process, when it is created !!
+     - for each process, base and bound values are initialized to 
+       be different - logical addresses/address space is identical - 
+       mapping of logical address to physical address is done by 
+       the processor during run time 
+     - physical address = logical address + base (logical address 
+                                                  < bound value)
+     - once a new process is created, it added to the ready state
+       and it will scheduled when it turn is selected by the scheduler
+     - current process will now resume execution after completing 
+       the system call execution 
+     - if the current process is chosen for execution after a system 
+       call completion, scheduler/dispatcher will load the cpu registers
+       with values saved in save area of the current process 
+     - typically, iia and ipsw are reloaded and other general purpose
+       registers are reloaded as well - eventually, iret is executed 
+       by scheduler and this completes the system call execution and
+       resuming execution of current process in user-space - in particular,
+       ipsw is moved to psw and iia is moved to ia  
+     - in modern systems, scheduler is invoked at the end of a system 
+       call API - this is one of the common points where scheduler gets
+       invoked !!
+
+    timer interrupt handling :
+     - in a typical system, timer interrupts are common and whenever 
+       a timer interrupt is generated, timer interrupt handler will be
+       invoked - timer interrupt handler is supposed to decrement the
+       current process time slice by the amount of time expired since
+       the last timer interrupt - if the time slice of the current 
+       process has expired, it will reschedule when the scheduler is 
+       invoked at the end of timer interrupt handler - otherwise, will 
+       continue the current process - meaning, time-slice of a process
+       and period between 2 timer interrupts may not be equal 
+     - in this reference, time-slice and interval between 2 timer interrupts
+       are identical - this is one case of implementation and not the
+       only case    
+  
+     limitations of implementation described in ch5 of this reference:
+      - h/w interrupts are disabled during execution of system space
+        code 
+      - a system call API cannot block while executing 
+      - there cannot a preemption while a system call is executing - 
+        there can only be preemption when a process is executing in 
+        users-space 
+
+10. following is the description for ch6 of this reference:
+    - in this chapter, pd does not contain save area - instead,
+      kernel stack contains save areas - kernel stack can maintain
+      several save areas 
+    - each process is allocated its own save area 
+    - a process may be blocked while executing inside a system call 
+    - h/w interrupts are reenabled while a process is executing in 
+      a system call after the user-space context of the process
+      is saved on the kernel stack and relevant fields of the pd
+      are updated accordingly    
+    - preemption of a process is allowed while executing inside a 
+      system call as well as while a process is executing in 
+      user-space 
+    - initial context saving and other house-keeping code of 
+      system call interrupt handler and other h/w interrupt 
+      handlers are the same  
+    - unlike in a system call interrupt handler, h/w interrupts
+      are not reenabled in a h/w interrupt handler !! this prevents
+      nested interrupt handler execution and this is the most 
+      common approach used in modern systems !!
+    - based on the above, in most common case, 2 h/w execution 
+      contexts are saved on kernel stack and appropriate information
+      is maintained in the pd - insystem counter is one and lastsa
+      pointer is another !!
+    - since our context saving method has changed, certain parts 
+      of the scheduler must be modified and certain parts 
+      can be left as it is !!
+    - the scheduling policy part is left as it is, but h/w context 
+      loading part / dispatching must be modified !!
+    - preemption is allowed inside a system call execution - in this
+      case, when a h/w interrupt occurs while a process is executing, 
+      interrupt handler will end up invoking dispatcher and the 
+      dispatcher will not resume the system call that was interrupted
+      ,but resume another process due to rescheduling - such a 
+      rescheduling is known as kernel - space preemption - in a 
+      system that supports user-space preemption and kernel space
+      preemption, kernel is said to preemptive and operating system
+      is said to fully preemptive - a preemptive kernel/operating 
+      system is expected to be more responsive to applications than
+      a kernel/operating that is partially preeemptive, in user-space
+      only !!!
+    - many system calls may block the current process, if needed - 
+      meaning, if a system call is requesting a resource and it 
+      is not available or if system call has requested I/O data 
+      and is not available, system call will change the state of
+      the current process to blocked, add the pd of the current 
+      process to approrpriate wait queue and end up calling the
+      scheduler - before calling the scheduler, current execution 
+      context of the current process is saved on the kernel stack 
+    - if a system call wishes to block the current process, 
+      switchprocess() is invoked in the current model - switch 
+      process does the above steps needed when a process must 
+      be blocked in system space - switchprocess() saves h/w 
+      context of the current process such that it will naturally 
+      resume from the system call after switchprocess code , 
+      when the blocked process is woken-up / rescheduled, in the
+      future !!
+    - a process that is blocked in a waitqueue may be woken-up by 
+      another related system call or a related interrupt handler 
+      appropriately - when a process is woken-up, it will be removed
+      from the wait queue, state changed to ready and added to 
+      ready queue 
+    - as per the merit of the process, scheduler will dispatch the 
+      process and it will resume from the system call in which 
+      it was blocked - this is same as above description !!        
+
+11. there are several points/locations in the system space where
+    scheduler is invoked to preempt current process - this does
+    not include blocking points/locations in system call routines -
+    such points/locations where scheduler is invoked to 
+    preempt current process are known as preemption points !!!
+
+12. context saving during mode switching - user-mode to system mode
+      - system stack is used for this 
+      - system call interrupt handler/interrupt handler
+
+13. context restoration during mode switching - system mode to user mode 
+      - system stack is used for this 
+      - system call interrupt handler 
+      - interrupt handler 
+
+14. certain concepts and implementations are not easy to visualize or 
+    illustrate - certain others can be !!!
+
+
+ 
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+

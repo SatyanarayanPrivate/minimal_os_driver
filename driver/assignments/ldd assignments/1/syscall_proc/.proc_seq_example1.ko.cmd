@@ -1,0 +1,1 @@
+cmd_/mnt/desd_sep_2008_class/syscall_proc/proc_seq_example1.ko := ld -r -m elf_i386  --build-id -o /mnt/desd_sep_2008_class/syscall_proc/proc_seq_example1.ko /mnt/desd_sep_2008_class/syscall_proc/proc_seq_example1.o /mnt/desd_sep_2008_class/syscall_proc/proc_seq_example1.mod.o

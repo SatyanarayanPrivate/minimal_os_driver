@@ -1,0 +1,1 @@
+cmd_/home/divesd/DRIVER-DATA/ass555/pseudo_class.ko := ld -r -m elf_i386 -T /home/divesd/lddinstall/linux-2.6.34-12/scripts/module-common.lds --build-id -o /home/divesd/DRIVER-DATA/ass555/pseudo_class.ko /home/divesd/DRIVER-DATA/ass555/pseudo_class.o /home/divesd/DRIVER-DATA/ass555/pseudo_class.mod.o

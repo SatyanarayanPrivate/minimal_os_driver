@@ -1,0 +1,18 @@
+http://tldp.org/HOWTO/Serial-HOWTO.html
+
+
+Let’s start near the end of the file with the parport_init() function. The first thing
+the driver must do is gain exclusive access to the relevant I/O ports. That’s done with
+the function request_region(), which returns a non-NULL value if it succeeds. The
+arguments to request_region() are a base port number, the number of ports to al-
+locate and the name of the device.
+
+
+struct resource * 	request_region  (unsigned long start, unsigned long n, const char *name)
+Allocate I/O port region.
+
+struct resource * 	request_mem_region (unsigned long start, unsigned long n, const char *name)
+Allocate I/O memory region.
+
+void 	release_region (unsigned long start, unsigned long n)
+Release I/O port region. 

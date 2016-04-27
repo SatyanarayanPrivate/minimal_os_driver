@@ -1,0 +1,490 @@
+1. from the system point of view page-frames are managed using
+   struct page { } objects - there will be one struct page{} per
+   page-frame in the system - all these struct page {} objects
+   are managed in one or more arrays in the system-space as part
+   of kernel's data-area - these structures may take certain 
+   overhead, but nothing can be done !!! 
+2. Linux has the organization of dividing the total pageframes
+   into zones - typically, DMA , NORMAL and HIGHMEM(depending 
+   upon your platform/architecture/kernel configuration/total 
+   physical memory, this may slightly change, but the basic
+   principle is the same) - broadly, we can divided the memory
+   zones into low-mem(DMA and/or NORMAL) and high-mem(HIGHMEM) 
+3. use /proc details  - /proc/meminfo or /proc/zoneinfo or 
+       /proc/buddyinfo ....
+
+4. all page-frames located in low-mem of the system are 
+   permanently mapped to a fixed set of kernel virtual 
+   addresses - this is the reason , low-mem is known 
+   as directly mapped area / permanently mapped page-frames !!!
+   - refer to KMA_overview.pdf for diagrams !!!
+   - what is the meaning of permanent mapping ??
+     - mapping has nothing to do with allocation of 
+       page-frames - meaning, we are assuming that
+       no memory allocation has happened in the system - 
+       not for user-space / not for kernel - space !!
+     - kernel page table entries for permanently mapped
+       low-mem is fixed at boot-up time and never changes - 
+       meaning, ptes of this part of the kernel page - tables
+       never change !!
+     - permanent mapping is not memory allocation 
+     - typically, first 896MiB of the total physical 
+       memory is permanently mapped to the first 896MiB 
+       of the kernel's virtual address space 
+   - what is the gain due to permanent mapping ??
+     - ptes need not be setup for kernel space memory 
+       allocations
+     - TLBs are fixed for these virtual addresses - 
+       which means, need not invalidate for every new
+       allocation !! 
+
+
+5. as against low-mem, high-mem portion of the system's memory 
+   is not permanently mapped to any part of virtual address space
+   of the kernel - if needed, page-frames from high-mem will 
+   be temporarily mapped to parts of kernel virtual address space
+   above 896MiB of KVAS 
+
+6. let us assume, that we have a (low-level) page-frames(s) allocator 
+   for each zone - we will assume, NORMAL AND DMA as a combined 
+   zone - low-mem and one zone for HIGHMEM - high-mem - these
+   allocators are known as buddy system allocators - they  
+   can allocate one or more contiguous page-frames via interfaces
+   provided by the kernel 
+
+7. if one or more page frames are allocated from low-mem, no 
+   special mapping efforts are needed by the kernel 
+
+8. if one or more page frames are allocated from high-mem, 
+   special efforts are needed via system APIs that will 
+   setup ptes and ensure that TLBs are invalidated
+
+9. buddy allocator interfaces are used by device-drivers/iosubsystems/
+   other kernel subsystems as well as process memory manager 
+   to allocated memory to user-space processes - first, we 
+   will understand more on user-space m.m. with the help of 
+   virtual memory aspects, before getting back to system space 
+   mm( no VM) 
+
+10. it is typical for kernel subsystems and device drivers 
+    to allocate memory from low-mem buddy allocator directly or
+    indirectly via sub-page memory allocators of slab allocator 
+    subsystem 
+11. kernel also uses high-mem for a few cases - the best example
+    is use of high-mem along with vmalloc() allocator for 
+    kernel modules' text and data - vmalloc() allocator is 
+    also known as non-contiguous memory allocator, which in turn 
+    depends on buddy allocator further dynamic memory -
+    allocation within a kernel module may be from low-mem or high-mem
+    as per requirements of the modules - this is decided by the 
+    developer of kernel module code !!!
+12. for user-space memory allocations, page-faults are the 
+    most common scenarios - page fault exception handler 
+    interacts directly with buddy allocator and allocates 
+    page-frames one by one with preference for high-mem 
+13. in a typical Linux system, process creation is via 
+    fork() system call and loading a program or application
+    in a newly created process is via execve() and related
+    library APIs
+14. Let us assume, we have just created a new process with 
+    fork(), the new process will be duplicate copy of 
+    the parent process - meaning, both will use text from 
+    the same program and other sections will be shared 
+    in copy-on-write mode - meaning, virtual address spaces
+    are different, page tables are different , but page-frames
+    are shared in read-only mode - as long as no writing, 
+    there will not be pagefaults 
+15. let us assume that child process attempts to write first
+    and there will be a memory fault (page fault) due to 
+    lack of permissions - this will be passed as error code
+    and exception handler will verify this and permissions
+    stored in VAD of the corresponding faulting virtual address-
+    what will be done if VAD permissions are rw ?
+     - a new, duplicate page-frame is allocated and 
+       given to the child process and usage counter of
+       the original page-frame is decremented by 1 !!
+    what will be done if VAD permissions are r ?
+     - terminate the process via SIGSEGV !!!    
+
+16. when the parent resumes and encounters a page-fault, 
+    system will not duplicate a new page-frame - instead, 
+    it will just reset the permissions of the pte to rw 
+
+17. what happens during stealing of page-frames from a process
+    when system encounters low-memory situation ???
+
+    - in the Linux system, virtual memory mgmt has several
+      characteristics - a few are listed below:
+         - demand paging for process page-frames after 
+           execve()
+         - copy-on-write after forking()
+         - page-frame stealing when memory is very-low !!
+         - during page-frame stealing,contents of the 
+           stolen page-frames are copies into page-slots
+           allocated in the swap area 
+         - if swap-space exits and certain pageframes
+           are paged-out of main memory during stealing 
+           and written into swap page-slots, these 
+           contents will be loaded into newly allocated
+           page-frames of the corresponding process, 
+           when that process attempts to access corresponding
+           page-frame, again 
+
+         - if no swap area exists, such a stealing is 
+           not possible 
+         
+
+18. in a modern day Linux kernel, processes in the system 
+    must follow certain rules of virtual memory mgmt to 
+    avoid over committing virtual address spaces for 
+    their requirements !!
+    - one such rule says that total virtual address spaces 
+      of all processes  in the system   cannot exceed 
+      swap-area size + total physicalmem  - % of total phy
+                                          memory that may be 
+                                          used by kernel space 
+    - if you set /proc/sys/vm/overcommit_memory to 2, 
+      kernel will ensure that allocation of virtual 
+      address spaces to all processes in the system will
+      never exceed the above system's limit - due to this,
+      there will never be a run-time crunch for processes 
+      and kernel will never invoke OOM killing policy against
+      processes that use large amounts of memory 
+
+19. if the above rules are followed with 
+    /proc/sys/vm/overcommit_memory set to 2, 
+    any excessive virtual address space allocations in a 
+    process that breaks the above rules, will fail and 
+    error will be returned during memory allocation - 
+    it is the responsibility of the developer to check
+    these conditions - otherwise, run-time issues will  
+    be faced by end users  
+
+20. if the above rules are not followed with 
+    /proc/sys/vm/overcommit_memory set to 1, 
+    any excessive virtual address space allocations in a 
+    process that breaks the above rules, will succeed and 
+    no error will be returned during memory allocation 
+    during run-time of the process, when it attempts to 
+    access too many page-frames and system is unable 
+    to allocate and also unable to steal page-frames, 
+    OOM killer is invoked - it may end up killin g
+    several processes and the experience could be 
+    a crash , where user's experience is unpleasant 
+
+21. now we will move on to system space memory mgmt and
+    allocation issues - still, do keep the big picture 
+    by including user-space mm. and allocation issues
+
+22. let us assume the total phy. mem is 1 Gib - following 
+    are the conclusions :
+      - let us reboot and set grub command line argument 
+        mem=1G  maxcpus=1 
+
+          - zones - > ???
+
+
+          - direct mapping(low-mem) ->  ???
+
+
+          - real usage of system space virtual address space
+            against the illustrated diagrams in kma slides
+                     ?????  
+
+23. let us assume the total phy. mem is 512Mib - following 
+    are the conclusions :
+      - let us reboot and set grub command line argument 
+        mem=512M  maxcpus=1 
+
+          - zones - > ???
+
+
+          - direct mapping(low-mem) ->  ???
+
+
+          - real usage of system space virtual address space
+            against the illustrated diagrams in kma slides
+                     ????? 
+
+24.  the maximum allowed low-mem in a typical kernel configuration
+     is 896Mib - if our total phy.mem is 1Gib, 896Mib is low-mem
+     and balance is treated as high-mem - in addition, kernel 
+     virtual memory address space layout is divided into 896Mib
+     for direct mapping low-mem and balance is kept open 
+     for vmalloc() and other run-time mapping requirements  
+
+25.  the maximum allowed low-mem in a typical kernel configuration
+     is 896Mib - if our total phy.mem is 512Mib, 512Mib is low-mem
+     and balance 0bytes  is treated as high-mem - in addition, kernel 
+     virtual memory address space layout is divided into 512Mib
+     for direct mapping low-mem and balance is kept open 
+     for vmalloc() and other run-time mapping requirements 
+
+26.  the maximum allowed low-mem in a typical kernel configuration
+     is 896Mib - if our total phy.mem is 256Mib, 256Mib is low-mem
+     and balance 0bytes  is treated as high-mem - in addition, kernel 
+     virtual memory address space layout is divided into 256Mib
+     for direct mapping low-mem and balance is kept open 
+     for vmalloc() and other run-time mapping requirements
+
+
+27. if you use free -m and look into the first field - free  
+    - it will be less than total phy mem we set using mem=512MiB
+      or 256Mib 
+     
+28. in the above cases, kernel uses certain memory during boot-up
+    and that is not included in the free field of free -m - 
+    if you have noted this difference, what is the value ??
+   
+29. in addition, use dmesg to look into the kernel's text / data / init
+    sizes - what are they ???
+
+30. what is the scenario if total phy mem is mem=5G ???
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+     
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
