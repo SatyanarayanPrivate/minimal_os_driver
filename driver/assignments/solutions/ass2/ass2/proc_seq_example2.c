@@ -125,7 +125,7 @@ mydrv_init(void)
 
   int i;
   
- 
+ /*
   entry = create_proc_entry("readme", S_IRUSR, NULL);
   if (entry) {
    
@@ -135,7 +135,8 @@ mydrv_init(void)
   {
 	return -EINVAL;
   }
-  
+  */
+  entry = proc_create("readme", S_IRUSR, NULL, &mydrv_proc_fops);
  
 
   printk("we are in init function of the module\n");  //2
