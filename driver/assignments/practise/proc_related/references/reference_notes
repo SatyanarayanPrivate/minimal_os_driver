@@ -1,0 +1,16 @@
+
+:: http://tuxthink.blogspot.in/2013/12/creating-directory-under-proc-in-kernel.html
+parent=proc_mkdir(dirname,NULL);
+proc_create("hello",0,parent,&proc_fops);
+
+
+
+#define LIST_HEAD_INIT(name) { &(name), &(name) }
+
+#define LIST_HEAD(name) \
+	struct list_head name = LIST_HEAD_INIT(name)
+	
+
+#define list_for_each_safe(pos, n, head) \
+	for (pos = (head)->next, n = pos->next; pos != (head); \
+		pos = n, n = pos->next)

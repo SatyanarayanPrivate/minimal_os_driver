@@ -24,7 +24,7 @@ mydrv_seq_start(struct seq_file *seq, loff_t *pos)
 
   for_each_process(task) {
     if (*pos == off++) {
-                        printk("in start : success %d\n",*pos);
+                        printk("in start : success %d\n", (int )*pos);
                         return task;
     }
   }
