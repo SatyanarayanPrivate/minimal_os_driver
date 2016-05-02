@@ -1,1 +1,0 @@
-cmd_/home/divesd/ldass/ass51/addon/mycode_char.ko := ld -r -m elf_i386 -T /ldevdr/linux-2.6.34-12/scripts/module-common.lds --build-id -o /home/divesd/ldass/ass51/addon/mycode_char.ko /home/divesd/ldass/ass51/addon/mycode_char.o /home/divesd/ldass/ass51/addon/mycode_char.mod.o

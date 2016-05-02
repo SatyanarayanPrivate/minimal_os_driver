@@ -1,1 +1,0 @@
-cmd_/home/divesd/ldass/lowmem/lowmem.ko := ld -r -m elf_i386 -T /ldevdr/linux-2.6.34-12/scripts/module-common.lds --build-id -o /home/divesd/ldass/lowmem/lowmem.ko /home/divesd/ldass/lowmem/lowmem.o /home/divesd/ldass/lowmem/lowmem.mod.o

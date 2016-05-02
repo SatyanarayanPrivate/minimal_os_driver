@@ -1,1 +1,0 @@
-cmd_/home/divesd/ldass/himem/highmem.ko := ld -r -m elf_i386 -T /ldevdr/linux-2.6.34-12/scripts/module-common.lds --build-id -o /home/divesd/ldass/himem/highmem.ko /home/divesd/ldass/himem/highmem.o /home/divesd/ldass/himem/highmem.mod.o
