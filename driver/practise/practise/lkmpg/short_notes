@@ -1,0 +1,6 @@
+
+$ /proc/kallsyms
+    - Symbols exported by kernel 
+
+$ strace ./hello
+    - Gives system call flow from kernel level

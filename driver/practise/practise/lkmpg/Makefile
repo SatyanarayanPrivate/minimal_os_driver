@@ -8,7 +8,11 @@
 # obj-m += hello_word_2.o
 
 # Module parameter
-obj-m += module_param.o
+# obj-m += module_param.o
+
+# # Multiple files
+# obj-m += startstop.o
+# startstop-objs := module_start.o module_stop.o
 
 all:
 	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules

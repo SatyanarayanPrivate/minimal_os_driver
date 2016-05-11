@@ -5,6 +5,8 @@
 #define DRIVER_AUTHOR "sample auther name"
 #define DRIVER_DESC "sample description"
 
+int syms2_exported;
+
 static int __init my_module_init (void) {
     
     printk ( KERN_INFO "\nhello word init !!!!!!!!!!!!!!!!!!11\n");
@@ -41,3 +43,5 @@ MODULE_DESCRIPTION(DRIVER_DESC);
 * currently unused other than for documen
 */
 MODULE_SUPPORTED_DEVICE("testdevice");
+
+EXPORT_SYMBOL(syms2_exported);
