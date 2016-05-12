@@ -4,3 +4,6 @@ $ /proc/kallsyms
 
 $ strace ./hello
     - Gives system call flow from kernel level
+    
+$ /proc/devices
+    - gives devices list
