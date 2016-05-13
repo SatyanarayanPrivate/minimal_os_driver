@@ -16,7 +16,7 @@ int main (void) {
     //lseek(fd,22,SEEK_SET);
 
     printf ("\ndevice opened");
-    ret = read(fd,buf,15);
+    ret = read(fd,buf,60);
     printf("the no. characters returned is %d\n", ret);
     buf[ret] = 0x00;
     

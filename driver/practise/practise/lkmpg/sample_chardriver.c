@@ -89,7 +89,7 @@ static int chrdrive_init (void) {
     printk(KERN_INFO "the device file.\n");
     printk(KERN_INFO "Remove the device file and module when done.\n");
    
-    chrdevice_buffer = kmalloc (sizeof(DEVICE_BUFFER_SIZE), GFP_KERNEL);
+    chrdevice_buffer = kmalloc (DEVICE_BUFFER_SIZE, GFP_KERNEL);
     if (chrdevice_buffer == NULL) {
         printk (KERN_ALERT "chardevice :: memory error: kmalloc failed\n");
         return -ENOMEM;
