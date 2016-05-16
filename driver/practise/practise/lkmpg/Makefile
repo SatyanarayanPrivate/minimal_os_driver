@@ -15,7 +15,10 @@
 # startstop-objs := module_start.o module_stop.o
 
 # char driver 
-obj-m += sample_chardriver.o
+# obj-m += sample_chardriver.o
+
+# procfs
+obj-m += procfs1.o
 
 all:
 	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules
